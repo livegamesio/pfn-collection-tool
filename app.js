@@ -2,19 +2,10 @@
 
 const fs = require('fs')
 const async = require('async')
-
 const workerFarm = require('worker-farm')
 
 //
 const numCPUs = require('os').cpus().length
-
-//
-const FARM_OPTIONS = {
-  maxConcurrentWorkers: numCPUs / 2, // best performant
-  maxCallsPerWorker: Infinity,
-  maxConcurrentCallsPerWorker: 1
-}
-const pfnWorkers = workerFarm(FARM_OPTIONS, require.resolve('./worker'))
 
 // Arg
 const argv = require('yargs/yargs')(process.argv.slice(2))
@@ -61,6 +52,10 @@ const argv = require('yargs/yargs')(process.argv.slice(2))
   .default('t', true)
   .boolean('t')
   //
+  .alias('w', 'worker')
+  .describe('w', 'Number of worker threads (default: numCPUs / 2)')
+  .default('w', Math.ceil(numCPUs / 2))
+  //
   .help('h')
   .alias('h', 'help')
   //
@@ -68,6 +63,14 @@ const argv = require('yargs/yargs')(process.argv.slice(2))
   //
   .epilog('LiveGames - PFN Collection Tool')
   .argv
+
+//
+const FARM_OPTIONS = {
+  maxConcurrentWorkers: argv.worker || (numCPUs / 2), // best performant (numCPUs / 2)
+  maxCallsPerWorker: Infinity,
+  maxConcurrentCallsPerWorker: 1
+}
+const pfnWorkers = workerFarm(FARM_OPTIONS, require.resolve('./worker'))
 
 // Config
 const logTime = argv.logTimer
@@ -82,8 +85,6 @@ let chunkSize = argv.chunk
 if (count < chunkSize) chunkSize = count
 
 // ----------------------------------------------------------------------------------------------------
-
-//
 let fileStream
 let fileStreamRaw
 let fileUnscaledStream
@@ -167,7 +168,7 @@ const q = async.cargo(async (tasks) => {
 
   return true
   //
-}, 10)
+}, numCPUs)
 
 // assign an error callback
 q.error(function (err, task) {
