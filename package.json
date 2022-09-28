@@ -1,0 +1,58 @@
+{
+  "name": "pfn-collection-tool",
+  "version": "1.0.0",
+  "description": "Collection Tool for Provably Fair Numbers",
+  "author": "livegames",
+  "license": "Apache-2.0",
+  "main": "./app.js",
+  "scripts": {
+    "start": "node ./app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "github.com/livegamesio/pfn-collection-tool"
+  },
+  "keywords": [
+    "livegames",
+    "pfn",
+    "provably",
+    "fair",
+    "crng"
+  ],
+  "dependencies": {
+    "async": "^3.2.4",
+    "pfn": "https://github.com/livegamesio/pfn",
+    "worker-farm": "^1.7.0",
+    "yargs": "^17.5.1"
+  },
+  "devDependencies": {
+    "standard": "17.0.0"
+  },
+  "standard": {
+    "globals": [
+      "__function",
+      "__line",
+      "__stack",
+      "constants",
+      "expect",
+      "describe",
+      "before",
+      "beforeEach",
+      "beforeAll",
+      "after",
+      "afterEach",
+      "afterAll",
+      "browser",
+      "test",
+      "by",
+      "it"
+    ],
+    "rules": {
+      "camelcase": 0,
+      "object-curly-spacing": [
+        "error",
+        "never"
+      ]
+    }
+  }
+}
