@@ -1,6 +1,6 @@
 {
   "name": "pfn-collection-tool",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Collection Tool for Provably Fair Numbers",
   "author": "livegames",
   "license": "Apache-2.0",
@@ -21,6 +21,7 @@
   ],
   "dependencies": {
     "async": "^3.2.4",
+    "mathjs": "^11.3.1",
     "pfn": "https://github.com/livegamesio/pfn",
     "worker-farm": "^1.7.0",
     "yargs": "^17.5.1"

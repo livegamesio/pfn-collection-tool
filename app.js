@@ -17,10 +17,30 @@ const argv = require('yargs/yargs')(process.argv.slice(2))
   .nargs('n', 1)
   .string('n')
   //
+  .alias('ps', 'print-seed')
+  .describe('ps', 'Print Seed')
+  .default('ps', false)
+  .boolean('ps')
+  //
   .alias('c', 'count')
   .describe('c', 'Total count')
   .demandOption(['c'])
   .number('c')
+  //
+  .describe('size', 'Size')
+  .demandOption(['size'])
+  .default('size', 90)
+  .number('size')
+  //
+  .describe('min', 'Minimum ball number')
+  .demandOption(['min'])
+  .default('min', 1)
+  .number('min')
+  //
+  .describe('max', 'Max ball number')
+  .demandOption(['max'])
+  .default('max', 90)
+  .number('max')
   //
   .alias('k', 'chunk')
   .describe('k', 'Chunk size')
@@ -31,20 +51,31 @@ const argv = require('yargs/yargs')(process.argv.slice(2))
   .alias('s', 'save-scaled')
   .describe('s', 'Save scaled numbers to file')
   .demandOption(['s'])
-  .default('s', true)
+  .default('s', false)
   .boolean('s')
   //
   .alias('u', 'save-unscaled')
   .describe('u', 'Save unscaled numbers to file')
   .demandOption(['u'])
-  .default('u', true)
+  .default('u', false)
   .boolean('u')
   //
   .alias('r', 'save-raw')
   .describe('r', 'Save raw numbers to file')
   .demandOption(['r'])
-  .default('r', true)
+  .default('r', false)
   .boolean('r')
+  //
+  .alias('d', 'save-undivided')
+  .describe('d', 'Save undivided numbers to file')
+  .demandOption(['d'])
+  .default('d', false)
+  .boolean('d')
+  //
+  .describe('use-bigint', 'Save undivided numbers to file')
+  .demandOption(['use-bigint'])
+  .default('use-bigint', true)
+  .boolean('use-bigint')
   //
   .alias('t', 'log-timer')
   .describe('t', 'Log timer')
@@ -78,8 +109,16 @@ const logTime = argv.logTimer
 const saveScaledToFile = argv.saveScaled // 90 numbers from 1 to 90
 const saveUnscaledToFile = argv.saveUnscaled // 90 unscaled numbers from 1 to 90
 const saveRawToFile = argv.saveRaw // all unscaled numbers generated to reach (scaled) 90 balls
+const saveUndividedToFile = argv.saveUndivided //
 
 const count = argv.count
+
+const size = argv.size
+const min = argv.min
+const max = argv.max
+
+const printOnlyNumbers = !argv.printSeed
+const useBigint = argv.useBigint
 
 let chunkSize = argv.chunk
 if (count < chunkSize) chunkSize = count
@@ -88,13 +127,14 @@ if (count < chunkSize) chunkSize = count
 let fileStream
 let fileStreamRaw
 let fileUnscaledStream
+let fileUndividedStream
 
 const outputName = argv.name || Date.now()
 
 console.time('appLifetime')
 
 // folder
-if (saveScaledToFile || saveUnscaledToFile || saveRawToFile) {
+if (saveScaledToFile || saveUnscaledToFile || saveRawToFile || saveUndividedToFile) {
   fs.mkdirSync(`./output/${outputName}`, { recursive: true })
 }
 
@@ -106,6 +146,12 @@ if (saveScaledToFile) {
 
 if (saveUnscaledToFile) {
   fileUnscaledStream = fs.createWriteStream(`./output/${outputName}/unscaled.txt`, {
+    flags: 'a'
+  })
+}
+
+if (saveUndividedToFile) {
+  fileUndividedStream = fs.createWriteStream(`./output/${outputName}/undivided.txt`, {
     flags: 'a'
   })
 }
@@ -159,6 +205,10 @@ const q = async.cargo(async (tasks) => {
       await fileUnscaledStream.write(task.chunkUnscaledLines.join('\n'))
     }
 
+    if (saveUndividedToFile && task.chunkUndividedLines && task.chunkUndividedLines.length) {
+      await fileUndividedStream.write(task.chunkUndividedLines.join('\n'))
+    }
+
     if (saveRawToFile && task.chunkRawLines && task.chunkRawLines.length) {
       await fileStreamRaw.write(task.chunkRawLines.join('\n'))
     }
@@ -185,9 +235,15 @@ for (workerIndex = 0; workerIndex < Math.ceil(count / chunkSize); workerIndex++)
     start,
     end,
     logTime,
+    useBigint,
+    size,
+    min,
+    max,
     saveScaledToFile,
     saveRawToFile,
-    saveUnscaledToFile
+    saveUnscaledToFile,
+    saveUndividedToFile,
+    printOnlyNumbers
   }
 
   pfnWorkers(taskOptions, (err, response) => {
